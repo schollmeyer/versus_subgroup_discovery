@@ -20,7 +20,7 @@ data(anole.data)
 y <- anole.data[,1]
 lambda=1
 y <- lambda*y +(1-lambda)*runif(length(y),min=min(y),max=max(y))
-y <- y > quantile(y,0.5)
+y <- y > quantile(y,0.25) & y < quantile(y,0.75)
 y <- oofos::compute_objective(data.frame(y=y),"y","TRUE")
 table(y)
 
