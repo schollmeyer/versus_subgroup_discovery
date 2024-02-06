@@ -18,6 +18,8 @@ D2 <- cophenetic.phylo(tree_2)
 gamma <- 0.0018
 D3 <- (gamma*D1+(1-gamma)*D2)
 
+
+i <- 2
 data(anole.data)
 y <- anole.data[,i]
 lambda=1
