@@ -58,3 +58,4 @@ result_3 <- gurobi::gurobi(versus_discovery_3)
 versus_discovery_3$objval <- result_3$objval
 test_3 <- oofos::compute_extent_optim_test(versus_discovery_3,n_rep=10000)
 
+## lokale objekt / Attribute vc dimensions/counts fuer regularisierung
