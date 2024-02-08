@@ -20,6 +20,7 @@ D3 <- (gamma*D1+(1-gamma)*D2)
 
 
 i <- 2
+i<-6
 data(anole.data)
 y <- anole.data[,i]
 lambda=1
@@ -28,10 +29,29 @@ y <- y  > quantile(y,0.5)# & y < quantile(y,0.75)
 y <- oofos::compute_objective(data.frame(y=y),"y","TRUE")
 table(y)
 
+Z <- oofos:::get_auto_conceptual_scaling(anole.data)
 
+y <- ddandrda::compute_tukeys_depth(Z,Z)
+
+
+y <- y  > quantile(y,0.25) & y < quantile(y,0.75)
+
+y <- oofos::compute_objective(data.frame(y=y),"y","TRUE")
 context_1 <- get_context_from_distance(D1,complemented=FALSE)
 context_2 <- get_context_from_distance(D2,complemented=FALSE)
 context_3 <- get_context_from_distance(D3,complemented=FALSE)
+
+
+####
+
+vcdims <- local_object_VCdims(t(context_1),outputflag = 0,timelimit=1000)
+
+C <- vcdims$vcdims+0.25*vcdims$vccounts
+plot(ecdf(C))
+
+j <- which(C <=quantile(C,0.9))
+context_1 <-context_1[,j]
+####
 
 L_1 <- oofos:::compute_concept_lattice(context_1)
 L_2 <- oofos:::compute_concept_lattice(context_2)

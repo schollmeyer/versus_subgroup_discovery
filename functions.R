@@ -19,3 +19,41 @@ get_context_from_distance <- function(dist_mat,complemented=TRUE,sampling_propor
 if(complemented){context <- (cbind(context,1-context))}
 if(remove_duplicates){context <- t(unique(t(context)))}
 return(context)}
+
+
+
+local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FALSE,transpose=TRUE,additional.constraint=TRUE,threads=1){
+  # Berechnet lokale Gegenstands-VC-dimension:
+  # X : Kontext
+  # indexs: Indizes derjenigen Punkte, für die die lokale Gegenstands-VC-Dimension berechnet werden soll
+  # outputflag: Argument, das an urobi übergeben wird (zur Steuerung der Ausgabe während der Berechnung)
+  # timelimit: Zeitlimit für die Berechnun einer einzelnen lokalen VC-Dimension
+  # pool: Wenn True, dann werden alle Kontranominalskalen maximaler Kardinalität berechnet, ansonsten nur eine
+  # Transpose: ob Kontext vorher transponiert werden soll: Bei Kontext mit mehr Zeilen als Spalten scheint mit transpose =TRUE die Berechnung schneller zu laufen, für mehr Spalten als Zeilen scheint transpose=FALSE oft schneller zu sein
+  #additional.constraint: ob zusätzlicher Constraint (Anzahl Gegenstände der Kontranominalskala==Anzahl Merkmele der Kontranominalskala) mit implementiert werden soll (dadurch wird Berechnung oft leicht schneller)
+  
+  m=dim(X)[1]
+  n=dim(X)[2]
+  ans=list()
+  vcdims=rep(0,m)
+  vccounts=rep(0,m)
+  for(k in indexs){
+    if(transpose){
+      temp=compute_extent_vc_dimension(t(X),additional_constraint=additional.constraint)
+      temp$lb[k+n]=1
+    }
+    else{
+      temp=extent.VC((X))
+      temp$lb[k]=1
+    }
+    
+    
+    if(pool){a=gurobi(temp,list(outputflag=outputflag,timelimit=timelimit,PoolSolutions=100000000,PoolSearchMode=2,Poolgap=0.00001))}
+    else{a=gurobi(temp,list(outputflag=outputflag,timelimit=timelimit,threads=threads))}
+    a <<- a
+    ans[[k]]=a
+    vcdims[k]=a$objval
+    vccounts[k]=length(a$pool)
+    print(a$objval)
+  }
+  return(list(vcdims=vcdims,vccounts=vccounts,rest=ans))}
