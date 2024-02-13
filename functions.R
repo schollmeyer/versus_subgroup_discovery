@@ -1,5 +1,34 @@
-get_context_from_distance <- function(dist_mat,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10){
+check_three_point_condition <- function(dist_mat,eps=10^-6){
+  m <- ncol(dist_mat)
+  counterexamples <- array(0,c(m,m))
+  for( k in (1:m)){
+    for(l in (1:m)){
+      
+      
+      counterexamples[k,l] <- sum(dist_mat[k,l] > eps+ pmax(dist_mat[k,],dist_mat[,l]))
+    }
+    
+    
+    
+  }
+  
+return(counterexamples)  
+  
+}
 
+
+
+
+
+
+
+
+
+
+
+
+get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10){
+  counterexamples <- check_three_point_condition(dist_mat,eps=eps2)
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
   if(set_seed){set.seed(seed)}
@@ -9,9 +38,13 @@ get_context_from_distance <- function(dist_mat,complemented=TRUE,sampling_propor
   t <- 1
   for(k in seq_len(n_rows_sample)){
      for(l in seq_len(n_rows_sample)[-k]){
-	   print(t)
-	   context[,t] <- (dist_mat[,sampled_indexs[k]] >= dist_mat[,sampled_indexs[l]] +eps)
-	   t <- t + 1
+       if(counterexamples[k,l] <= threshold){
+         print(counterexamples[k,l])
+	     #print(t)
+	     context[,t] <- (dist_mat[,sampled_indexs[k]] >= dist_mat[,sampled_indexs[l]] +eps)
+       
+	      t <- t + 1
+       }
 	   
 	  }
 	 }
