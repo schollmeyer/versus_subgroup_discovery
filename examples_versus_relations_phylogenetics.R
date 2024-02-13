@@ -20,7 +20,7 @@ D3 <- (gamma*D1+(1-gamma)*D2)
 
 
 i <- 2
-i<-6
+
 data(anole.data)
 y <- anole.data[,i]
 lambda=1
@@ -40,7 +40,12 @@ y <- oofos::compute_objective(data.frame(y=y),"y","TRUE")
 context_1 <- get_context_from_distance(D1,complemented=FALSE)
 context_2 <- get_context_from_distance(D2,complemented=FALSE)
 context_3 <- get_context_from_distance(D3,complemented=FALSE)
-
+######
+tree_2 <- regularize_tree(tree_1,6)
+D2 <- cophenetic.phylo(tree_2)
+context_2 <- get_context_from_distance(D2,complemented=FALSE)
+L_2 <- oofos:::compute_concept_lattice(context_2)
+dim(L_2$extents)
 
 ####
 

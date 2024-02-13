@@ -7,8 +7,8 @@ get_context_from_distance <- function(dist_mat,complemented=TRUE,sampling_propor
   if(sampling_proportion==1){sampled_indexs <- seq_len(n_rows)}
   context <- array(0,c(n_rows,n_rows_sample*(n_rows_sample-1)))
   t <- 1
-  for(k in seq_len(n_rows_sample-1)){
-     for(l in seq(k+1,n_rows_sample)){
+  for(k in seq_len(n_rows_sample)){
+     for(l in seq_len(n_rows_sample)[-k]){
 	   print(t)
 	   context[,t] <- (dist_mat[,sampled_indexs[k]] >= dist_mat[,sampled_indexs[l]] +eps)
 	   t <- t + 1
@@ -20,6 +20,14 @@ if(complemented){context <- (cbind(context,1-context))}
 if(remove_duplicates){context <- t(unique(t(context)))}
 return(context)}
 
+regularize_tree <- function(tree,lambda){
+    
+  h <- diag(vcv(tree))
+  d <- max(h) - h
+  ii <- sapply(1:Ntip(tree), function(x, y) which(y == 
+                                                    x), y = tree$edge[, 2])
+  tree$edge.length[ii] <- tree$edge.length[ii] + d - lambda
+  return(tree)}
 
 
 local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FALSE,transpose=TRUE,additional.constraint=TRUE,threads=1){
