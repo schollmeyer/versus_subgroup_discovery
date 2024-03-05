@@ -3,9 +3,10 @@ check_three_point_condition <- function(dist_mat,eps=10^-6){
   counterexamples <- array(0,c(m,m))
   for( k in (1:m)){
     for(l in (1:m)){
+      counterexamples[k,l] <- sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
+    
       
-      
-      counterexamples[k,l] <- sum(dist_mat[k,l] > eps+ pmax(dist_mat[k,],dist_mat[,l]))
+      #counterexamples[k,l] <- sum(dist_mat[k,l] > eps+ (pmax(dist_mat[k,],dist_mat[,l])))
     }
     
     
@@ -41,7 +42,7 @@ get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampl
        if(counterexamples[k,l] <= threshold){
          print(counterexamples[k,l])
 	     #print(t)
-	     context[,t] <- (dist_mat[,sampled_indexs[k]] >= dist_mat[,sampled_indexs[l]] +eps)
+	     context[,t] <- (dist_mat[,sampled_indexs[k]] > dist_mat[,sampled_indexs[l]] +eps)
        
 	      t <- t + 1
        }
