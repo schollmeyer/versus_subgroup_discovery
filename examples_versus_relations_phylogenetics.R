@@ -1,4 +1,6 @@
 # relaxierter ultrametrik-gurobi algorihmus noch implementieren
+
+# s_fit_ultrametric {clue}
 library(phytools) # for phylogenetic datasets
 library(maotai) # for checking if matrix is a distance matrix : checkmetric()
 #covariates:
