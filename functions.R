@@ -99,3 +99,51 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
     print(a$objval)
   }
   return(list(vcdims=vcdims,vccounts=vccounts,rest=ans))}
+
+
+
+ F <- function(dist_mat, delta){
+   
+   m <- ncol(dist_mat)
+   indexs <- seq_len(m^2);dim(indexs) <- c(m,m)
+   
+   A <- array(0,c(m^2+m^2,m^2+m^2))
+   sense <- rep("",m^2+m^2)
+   rhs <- rep(0,m^2+m^2)
+   t <- 1
+   
+   t <- 1
+   ## ultrametric property
+   genconmax <- list()
+   for(k in (1:m)){
+     for(l in (1:m)){
+         genconmax[[t]]<- list( resvar = indexs[k,l]+m^2, vars = pmax(indexs[k,],indexs[,l]))
+          A[t,indexs[k,l]] <- 1
+          A[t,indexs[k,l]+m^2] <- -1
+          sense[t] <- "<"
+          rhs[t] <- 0
+         
+         t <- t+1
+         
+     }}
+   
+   
+   ## symmetry
+   for(k in (1:m)){
+     for(l in (1:m)){
+       A[t,indexs[k,l]] <- 1
+       A[t,indexs[l,k]] <- -1
+       sense[t] <- "="
+       rhs[t] <- 0
+       t <- t+1
+       
+     }
+   }
+   
+   model <- list(A=A,sense=sense,rhs=rhs,obj=NULL,genconmin=genconmax,lb=c(as.vector(dist_mat)-delta,rep(0,m^2)),ub=c(as.vector(dist_mat)+delta,rep(Inf,m^2)))
+   result <- gurobi::gurobi(model)
+   print(result$status)
+   result <- result$x[(1:(m^2))];dim(result) <- c(m,m)
+   return(result)
+   
+ }
