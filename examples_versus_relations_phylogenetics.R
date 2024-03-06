@@ -1,16 +1,18 @@
 # relaxierter ultrametrik-gurobi algorihmus noch implementieren
 library(phytools) # for phylogenetic datasets
-library(maotai) # for checking if matrix is a distance matrix  
+library(maotai) # for checking if matrix is a distance matrix : checkmetric()
 #covariates:
 
 data(anoletree)
 tree_1 <- anoletree
 tree_2 <- force.ultrametric(tree_1)
+tree_1 <- ape::nj(D1)
 
 D1 <- cophenetic.phylo(tree_1)
+D1 <- D1+ rnorm(length(D1),sd=0.1)
 D2 <- cophenetic.phylo(tree_2)
 
-context_1 <- get_context_from_distance(D1,complemented=FALSE,eps=10^-7,eps2=10^-7,threshold=0)
+context_1 <- get_context_from_distance(D1,complemented=FALSE,eps=10^-6,eps2=0,threshold=8)
 context_2 <- get_context_from_distance(D2,complemented=FALSE,eps=0,eps2=0,threshold=0)
 # context_3 <- get_context_from_distance(D3,complemented=FALSE)
 

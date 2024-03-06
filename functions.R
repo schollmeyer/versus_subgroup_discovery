@@ -12,7 +12,7 @@ check_three_point_condition <- function(dist_mat,eps=10^-6){
     
     
   }
-  
+  #print(sum(counterexamples>0))
 return(counterexamples)  
   
 }
