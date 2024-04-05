@@ -147,3 +147,47 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
    return(result)
    
  }
+
+
+compute_phi <- function(attribute_set, context){temp <- matrix(context[,attribute_set],ncol=sum(attribute_set));Rfast::rowAll(temp,parallel=FALSE)}
+compute_psi <- function(object_set, context){temp <- matrix(context[object_set,],nrow=sum(object_set));Rfast::colAll(temp,parallel=FALSE)}
+
+compute_object_closure <- function(object_set,context){compute_phi(compute_psi(object_set,context),context)}
+
+is_halfspace <- function(extent, index, context){
+  extent_2 <- compute_object_closure(extent,context)
+  if(extent[index]==1){return(FALSE)}
+  if(any(extent_2!=extent)){return(FALSE)}
+  for(k in which(extent==0)){
+	extent_2 <- extent
+	extent_2[k] <- 1
+	extent_2 <- compute_object_closure(extent_2,context)
+	if(any(extent_2[which(extent==0)]==1) & extent_2[index]==0){return(FALSE)}
+  }
+
+return(TRUE)
+
+}
+
+
+
+get_halfspace_context <- function(context){
+ n_objects <- nrow(context)
+ object_sets <- gtools::permutations(2,n_objects,repeats.allowed=TRUE)-1
+ #object_sets <- oofos:::compute_concept_lattice(t(context))$intents
+ dims=dim(object_sets)
+ object_sets <- as.logical(object_sets)
+ dim(object_sets) <- dims
+ result <- NULL
+ for(k in (1:nrow(object_sets))){
+ print(k)
+    for(index in which(object_sets[k,]==0)){
+      temp <- is_halfspace(object_sets[k,], index,context)
+	  
+	  if(temp==TRUE){ print(k);print(temp);result <- cbind(result,object_sets[k,])}
+	}
+ }
+ return(result)}
+ 
+
+
