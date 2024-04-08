@@ -60,6 +60,7 @@ objective <- oofos:::compute_objective(data.frame(y=y),"y","AT1")
 
 
 
+
 D <- get_distance_from_context(context,normalized=TRUE)
 
 positive_quantile <- function(x,alpha){quantile(x[which(x>0)],alpha)}
@@ -71,6 +72,7 @@ eps <- quantile(D_plus,seq(0,0.6,length.out=10))
 fitted_pseudoultrametrics <- list()
 for(k in (1:10)){
 ans <- fit_ultrametric(D,eps=eps[k],upper_bound=4*max(D)+2*eps[k],start_solution=TRUE)
+gc()
 fitted_pseudoultrametrics[[k]] <- gurobi::gurobi(ans,list(timelimit=60*60))
 }
 D_ultra <- B$x[(1:3600)];dim(D_ultra) <- c(60,60)
