@@ -1,10 +1,34 @@
-check_three_point_condition <- function(dist_mat,eps=10^-6){
+get_distance_from_context <- function(context,bandwidth,method="manhattan"){
+  n_objects <- nrow(context)
+  n_attributes <- ncol(context)
+  result <- array(0,c(n_objects,n_objects))
+  #attribute_distances <- as.matrix(dist(t(context)))
+  for(k in (1:n_objects)){
+    print(k)
+    for(l in (1:n_objects)){
+      #for(m in (1:n_attributes)){
+      result[k,l] <- sum(abs(context[k,]-context[l,]))#dnorm(attribute_distances[m,],sd=bandwidth)* abs(contex[k,]-context[l,])))
+      #}
+    }
+    
+  }
+  
+  return(result)
+  
+}
+
+
+
+check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
   m <- ncol(dist_mat)
   counterexamples <- array(0,c(m,m))
   for( k in (1:m)){
     for(l in (1:m)){
-      counterexamples[k,l] <- sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
-    
+      # old version
+      counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
+      counterexamples[k,l] <- counterexamples[k,l]+ (1-lambda)*sum(pmax(dist_mat[k,] -( eps+ (pmax(dist_mat[k,l],dist_mat[l,]))),0))
+      
+      
       
       #counterexamples[k,l] <- sum(dist_mat[k,l] > eps+ (pmax(dist_mat[k,],dist_mat[,l])))
     }
@@ -28,8 +52,8 @@ return(counterexamples)
 
 
 
-get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10){
-  counterexamples <- check_three_point_condition(dist_mat,eps=eps2)
+get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1){
+  counterexamples <- check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
   if(set_seed){set.seed(seed)}
@@ -147,3 +171,83 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
    return(result)
    
  }
+ 
+ check_ultrametric_violations <- function(D){
+   ans <- 0
+   n_objects <- nrow(D)
+   dim(D)=c(n_objects,n_objects)
+   for(k in (1:n_objects)){
+     for(l in (1:n_objects)){
+       
+       ans <- ans+ sum(pmax(0,D[k,l]-pmax(D[k,],D[,l]))^2)
+     }}
+   print(ans)
+   return(ans)}
+ 
+ fit_ultrametric <- function(D,eps=0, start_solution=FALSE){
+   n_objects <- nrow(D)
+   ub=rep(Inf,n_objects^2+n_objects^3)
+   start <- NULL
+   if(start_solution){
+     
+     D_heuristic <- as.matrix(clue::ls_fit_ultrametric(D))
+     start=as.vector(D_heuristic)
+     t <- 1
+     
+     start_2 <- rep(0,n_objects^3)
+     for(k in (1:n_objects)){
+       for(l in (1:n_objects)){
+         for(m in (1:n_objects)){
+           start_2[t] <- max(D_heuristic[k,m],D_heuristic[m,l])
+           t <- t+1
+           
+         }}}
+     
+     start <- c(start,start_2)}
+   
+   genconmax=list()
+   
+   mat <- (1:n_objects^2)
+   dim(mat) <- c(n_objects,n_objects)
+   mat2 <- (1:n_objects^3)
+   dim(mat2) <- c(n_objects,n_objects,n_objects)
+   sense <- rep("",n_objects^2+n_objects^3)
+   rhs <- rep(0,n_objects^2+n_objects^3)  
+   i <- j <- v <- rep(0,n_objects^2+n_objects^3)
+   t <- 1
+   obj <- rnorm(n_objects^2+n_objects^3)
+   
+   t <- 1
+   for(k in (1:n_objects)){
+     for(l in (1:n_objects)){
+       for(m in (1:n_objects)){
+         i[t] <- t
+         j[t] <- mat[k,l]#mat2[k,m,l]+n_objects^2
+         v[t] <- 1
+         
+         i[t+n_objects^3] <- t
+         j[t+n_objects^3] <- mat2[k,m,l]+n_objects^2
+         v[t+n_objects^3] <- -1
+         #print(t-n_objects^2)
+         genconmax[[t]] <- list(resvar = mat2[k,m,l]+n_objects^2,vars=c(mat[k,m],mat[m,l]))
+         
+         t <- t+1
+         
+       }
+       #tt <- tt+1
+     }}
+   
+   t <- 1
+   for(k in (1:n_objects)){
+     for(l in (1:n_objects)){
+       if(k==l){ub[t] <- 0}
+       t <- t+1
+     }
+   }
+   
+   
+   Q=slam::simple_triplet_matrix(i=(1:(n_objects^2+n_objects^3)),j=(1:(n_objects^2+n_objects^3)),v=c(rep(1,n_objects^2),rep(0,n_objects^3)))
+   return(list(ub=ub,start=start,rhs=rep(eps,n_objects^2+n_objects^3),Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(D),rep(0,n_objects^3)),lb=rep(0,n_objects^2+n_objects^3),alpha=sum(D*D),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
+ }
+ 
+ 
