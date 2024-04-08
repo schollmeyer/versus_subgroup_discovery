@@ -10,11 +10,11 @@ get_distance_from_context <- function(context,bandwidth,method="manhattan"){
       result[k,l] <- sum(abs(context[k,]-context[l,]))#dnorm(attribute_distances[m,],sd=bandwidth)* abs(contex[k,]-context[l,])))
       #}
     }
-    
+
   }
-  
+
   return(result)
-  
+
 }
 
 
@@ -27,18 +27,18 @@ check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
       # old version
       counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
       counterexamples[k,l] <- counterexamples[k,l]+ (1-lambda)*sum(pmax(dist_mat[k,] -( eps+ (pmax(dist_mat[k,l],dist_mat[l,]))),0))
-      
-      
-      
+
+
+
       #counterexamples[k,l] <- sum(dist_mat[k,l] > eps+ (pmax(dist_mat[k,],dist_mat[,l])))
     }
-    
-    
-    
+
+
+
   }
   #print(sum(counterexamples>0))
-return(counterexamples)  
-  
+return(counterexamples)
+
 }
 
 
@@ -67,22 +67,22 @@ get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampl
          print(counterexamples[k,l])
 	     #print(t)
 	     context[,t] <- (dist_mat[,sampled_indexs[k]] > dist_mat[,sampled_indexs[l]] +eps)
-       
+
 	      t <- t + 1
        }
-	   
+
 	  }
 	 }
-	 
+
 if(complemented){context <- (cbind(context,1-context))}
 if(remove_duplicates){context <- t(unique(t(context)))}
 return(context)}
 
 regularize_tree <- function(tree,lambda){
-    
+
   h <- diag(vcv(tree))
   d <- max(h) - h
-  ii <- sapply(1:Ntip(tree), function(x, y) which(y == 
+  ii <- sapply(1:Ntip(tree), function(x, y) which(y ==
                                                     x), y = tree$edge[, 2])
   tree$edge.length[ii] <- tree$edge.length[ii] + d - lambda
   return(tree)}
@@ -97,7 +97,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
   # pool: Wenn True, dann werden alle Kontranominalskalen maximaler Kardinalität berechnet, ansonsten nur eine
   # Transpose: ob Kontext vorher transponiert werden soll: Bei Kontext mit mehr Zeilen als Spalten scheint mit transpose =TRUE die Berechnung schneller zu laufen, für mehr Spalten als Zeilen scheint transpose=FALSE oft schneller zu sein
   #additional.constraint: ob zusätzlicher Constraint (Anzahl Gegenstände der Kontranominalskala==Anzahl Merkmele der Kontranominalskala) mit implementiert werden soll (dadurch wird Berechnung oft leicht schneller)
-  
+
   m=dim(X)[1]
   n=dim(X)[2]
   ans=list()
@@ -112,8 +112,8 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
       temp=extent.VC((X))
       temp$lb[k]=1
     }
-    
-    
+
+
     if(pool){a=gurobi(temp,list(outputflag=outputflag,timelimit=timelimit,PoolSolutions=100000000,PoolSearchMode=2,Poolgap=0.00001))}
     else{a=gurobi(temp,list(outputflag=outputflag,timelimit=timelimit,threads=threads))}
     a <<- a
@@ -127,15 +127,15 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
 
  F <- function(dist_mat, delta){
-   
+
    m <- ncol(dist_mat)
    indexs <- seq_len(m^2);dim(indexs) <- c(m,m)
-   
+
    A <- array(0,c(m^2+m^2,m^2+m^2))
    sense <- rep("",m^2+m^2)
    rhs <- rep(0,m^2+m^2)
    t <- 1
-   
+
    t <- 1
    ## ultrametric property
    genconmax <- list()
@@ -146,12 +146,12 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
           A[t,indexs[k,l]+m^2] <- -1
           sense[t] <- "<"
           rhs[t] <- 0
-         
+
          t <- t+1
-         
+
      }}
-   
-   
+
+
    ## symmetry
    for(k in (1:m)){
      for(l in (1:m)){
@@ -160,64 +160,64 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
        sense[t] <- "="
        rhs[t] <- 0
        t <- t+1
-       
+
      }
    }
-   
+
    model <- list(A=A,sense=sense,rhs=rhs,obj=NULL,genconmin=genconmax,lb=c(as.vector(dist_mat)-delta,rep(0,m^2)),ub=c(as.vector(dist_mat)+delta,rep(Inf,m^2)))
    result <- gurobi::gurobi(model)
    print(result$status)
    result <- result$x[(1:(m^2))];dim(result) <- c(m,m)
    return(result)
-   
+
  }
-<<<<<<< HEAD
- 
+
+
  check_ultrametric_violations <- function(D){
    ans <- 0
    n_objects <- nrow(D)
    dim(D)=c(n_objects,n_objects)
    for(k in (1:n_objects)){
      for(l in (1:n_objects)){
-       
+
        ans <- ans+ sum(pmax(0,D[k,l]-pmax(D[k,],D[,l]))^2)
      }}
    print(ans)
    return(ans)}
- 
+
  fit_ultrametric <- function(D,eps=0, start_solution=FALSE){
    n_objects <- nrow(D)
    ub=rep(Inf,n_objects^2+n_objects^3)
    start <- NULL
    if(start_solution){
-     
+
      D_heuristic <- as.matrix(clue::ls_fit_ultrametric(D))
      start=as.vector(D_heuristic)
      t <- 1
-     
+
      start_2 <- rep(0,n_objects^3)
      for(k in (1:n_objects)){
        for(l in (1:n_objects)){
          for(m in (1:n_objects)){
            start_2[t] <- max(D_heuristic[k,m],D_heuristic[m,l])
            t <- t+1
-           
+
          }}}
-     
+
      start <- c(start,start_2)}
-   
+
    genconmax=list()
-   
+
    mat <- (1:n_objects^2)
    dim(mat) <- c(n_objects,n_objects)
    mat2 <- (1:n_objects^3)
    dim(mat2) <- c(n_objects,n_objects,n_objects)
    sense <- rep("",n_objects^2+n_objects^3)
-   rhs <- rep(0,n_objects^2+n_objects^3)  
+   rhs <- rep(0,n_objects^2+n_objects^3)
    i <- j <- v <- rep(0,n_objects^2+n_objects^3)
    t <- 1
    obj <- rnorm(n_objects^2+n_objects^3)
-   
+
    t <- 1
    for(k in (1:n_objects)){
      for(l in (1:n_objects)){
@@ -225,19 +225,19 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
          i[t] <- t
          j[t] <- mat[k,l]#mat2[k,m,l]+n_objects^2
          v[t] <- 1
-         
+
          i[t+n_objects^3] <- t
          j[t+n_objects^3] <- mat2[k,m,l]+n_objects^2
          v[t+n_objects^3] <- -1
          #print(t-n_objects^2)
          genconmax[[t]] <- list(resvar = mat2[k,m,l]+n_objects^2,vars=c(mat[k,m],mat[m,l]))
-         
+
          t <- t+1
-         
+
        }
        #tt <- tt+1
      }}
-   
+
    t <- 1
    for(k in (1:n_objects)){
      for(l in (1:n_objects)){
@@ -245,14 +245,14 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
        t <- t+1
      }
    }
-   
-   
+
+
    Q=slam::simple_triplet_matrix(i=(1:(n_objects^2+n_objects^3)),j=(1:(n_objects^2+n_objects^3)),v=c(rep(1,n_objects^2),rep(0,n_objects^3)))
    return(list(ub=ub,start=start,rhs=rep(eps,n_objects^2+n_objects^3),Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(D),rep(0,n_objects^3)),lb=rep(0,n_objects^2+n_objects^3),alpha=sum(D*D),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
  }
- 
- 
-=======
+
+
+
 
 
 compute_phi <- function(attribute_set, context){temp <- matrix(context[,attribute_set],ncol=sum(attribute_set));Rfast::rowAll(temp,parallel=FALSE)}
@@ -289,12 +289,12 @@ get_halfspace_context <- function(context){
  print(k)
     for(index in which(object_sets[k,]==0)){
       temp <- is_halfspace(object_sets[k,], index,context)
-	  
+
 	  if(temp==TRUE){ print(k);print(temp);result <- cbind(result,object_sets[k,])}
 	}
  }
  return(result)}
- 
 
 
->>>>>>> 72645c3d2d29ef427113b2a212af3e0a2b851c3b
+
+
