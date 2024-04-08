@@ -1,21 +1,29 @@
-get_distance_from_context <- function(context,bandwidth,method="manhattan"){
-  n_objects <- nrow(context)
-  n_attributes <- ncol(context)
-  result <- array(0,c(n_objects,n_objects))
+get_distance_from_context <- function(context,bandwidth,method="manhattan",normalized=TRUE){
+
+
+  result <- as.matrix(dist(context,method="manhattan"))
+
+if(normalized){result <- result/ncol(context)}
+  return(result)}
+
+ # n_objects <- nrow(context)
+ # n_attributes <- ncol(context)
+ # result <- array(0,c(n_objects,n_objects))
+ # context <- t(context)
   #attribute_distances <- as.matrix(dist(t(context)))
-  for(k in (1:n_objects)){
-    print(k)
-    for(l in (1:n_objects)){
-      #for(m in (1:n_attributes)){
-      result[k,l] <- sum(abs(context[k,]-context[l,]))#dnorm(attribute_distances[m,],sd=bandwidth)* abs(contex[k,]-context[l,])))
+ # for(k in (1:n_objects)){
+ #   print(k)
+ #   for(l in (1:n_objects)){
+ #     #for(m in (1:n_attributes)){
+ #     result[k,l] <- sum(abs(context[,k]-context[,l]))#dnorm(attribute_distances[m,],sd=bandwidth)* abs(contex[k,]-context[l,])))
       #}
-    }
+ #   }
 
-  }
+ # }
+#  if(normalized){result <- result/ncol(context)}
+#  return(result)
 
-  return(result)
-
-}
+#}
 
 
 
@@ -185,9 +193,9 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
    print(ans)
    return(ans)}
 
- fit_ultrametric <- function(D,eps=0, start_solution=FALSE){
+ fit_ultrametric <- function(D,eps=0, start_solution=FALSE,upper_bound=4*max(D)){
    n_objects <- nrow(D)
-   ub=rep(Inf,n_objects^2+n_objects^3)
+   ub=rep(upper_bound,n_objects^2+n_objects^3)
    start <- NULL
    if(start_solution){
 
@@ -255,8 +263,8 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
 
 
-compute_phi <- function(attribute_set, context){temp <- matrix(context[,attribute_set],ncol=sum(attribute_set));Rfast::rowAll(temp,parallel=FALSE)}
-compute_psi <- function(object_set, context){temp <- matrix(context[object_set,],nrow=sum(object_set));Rfast::colAll(temp,parallel=FALSE)}
+#compute_phi <- function(attribute_set, context){temp <- matrix(context[,attribute_set],ncol=sum(attribute_set));Rfast::rowAll(temp,parallel=FALSE)}
+#compute_psi <- function(object_set, context){temp <- matrix(context[object_set,],nrow=sum(object_set));Rfast::colAll(temp,parallel=FALSE)}
 
 compute_object_closure <- function(object_set,context){compute_phi(compute_psi(object_set,context),context)}
 
