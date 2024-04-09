@@ -67,7 +67,7 @@ positive_quantile <- function(x,alpha){quantile(x[which(x>0)],alpha)}
 
 D_plus <- D[which(D>0)]
 
-eps <- quantile(D_plus,seq(0,0.6,length.out=10))
+eps <- c(0,2*quantile(D_plus,seq(0,0.99,length.out=9)))
 
 fitted_pseudoultrametrics <- list()
 for(k in (1:10)){
@@ -75,7 +75,7 @@ ans <- fit_ultrametric(D,eps=eps[k],upper_bound=4*max(D)+2*eps[k],start_solution
 gc()
 fitted_pseudoultrametrics[[k]] <- gurobi::gurobi(ans,list(timelimit=60*60))
 }
-D_ultra <- B$x[(1:3600)];dim(D_ultra) <- c(60,60)
+D_ultra <- (fitted_pseudoultrametrics[[10]])$x[(1:6400)];dim(D_ultra) <- c(80,80)
 
 check_ultrametric_violations(D_ultra)
 

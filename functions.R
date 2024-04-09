@@ -190,7 +190,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
        ans <- ans+ sum(pmax(0,D[k,l]-pmax(D[k,],D[,l]))^2)
      }}
-   print(ans)
+
    return(ans)}
 
  fit_ultrametric <- function(D,eps=0, start_solution=FALSE,upper_bound=4*max(D)){
