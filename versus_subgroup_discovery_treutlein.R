@@ -5,7 +5,7 @@
 ## set working directory accordingly !!!
 
 # load additional functions for computing stylized betweenness:
-#source("used_stylized_betweenness_functions.R")
+source("used_stylized_betweenness_functions.R")
 # load additional functions needed for gene expression data (gene filter and scaling has to be applied):
 source("additional_functions_for_gene_expression_data.R")
 
@@ -34,11 +34,7 @@ x <- log2(1+x)
 dim(x)
 x <- scaling(x)
 
-
-set.seed(1234567)
-indexs <- sample((1:80),size=60)
-
-context <- oofos:::get_auto_conceptual_scaling(x[,])
+context <- oofos:::get_auto_conceptual_scaling(x[indexs,])
 
 # This context has VC dimension 80!!!
 
@@ -53,18 +49,11 @@ objective <- oofos:::compute_objective(data.frame(y=y),"y","AT1")
 
 
 # dist_mat_treutlein <- get_distance_from_context(context)
-#saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
-#dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
-#gbsb <- get_gbsb(x)
+saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
+dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
+gbsb <- get_gbsb(x)
 
-
-
-
-
-D <- get_distance_from_context(context,normalized=TRUE)
-
-positive_quantile <- function(x,alpha){quantile(x[which(x>0)],alpha)}
-
+<<<<<<< HEAD
 D_plus <- D[which(D>0)]
 
 eps <- c(0,2*quantile(D_plus,seq(0,0.99,length.out=9)))
@@ -88,11 +77,17 @@ vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(context_
 discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective)
 result <- gurobi::gurobi(discovery)
 discovery$objval <- result$objval
+=======
+set.seed(1234567)
+indexs <- sample((1:80),size=9)
+>>>>>>> 97e586e0d529883b3313774dc9ab87b817d555a2
 
-test <- oofos::compute_extent_optim_test(discovery)
 
+D <- get_distance_from_context(context[,])
 
-saveRDS(gbsb,"results_treutlein_gbsb/absb.RDS")
+ans <- fit_ultrametric(D,eps=0,start_solution=TRUE)
+B <- gurobi::gurobi(ans)
+BB=BsaveRDS(gbsb,"results_treutlein_gbsb/absb.RDS")
 
 
 # gbsb:
