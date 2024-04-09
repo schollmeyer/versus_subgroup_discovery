@@ -5,7 +5,7 @@
 ## set working directory accordingly !!!
 
 # load additional functions for computing stylized betweenness:
-#source("used_stylized_betweenness_functions.R")
+source("used_stylized_betweenness_functions.R")
 # load additional functions needed for gene expression data (gene filter and scaling has to be applied):
 source("additional_functions_for_gene_expression_data.R")
 
@@ -34,11 +34,7 @@ x <- log2(1+x)
 dim(x)
 x <- scaling(x)
 
-
-set.seed(1234567)
-indexs <- sample((1:80),size=60)
-
-context <- oofos:::get_auto_conceptual_scaling(x[,])
+context <- oofos:::get_auto_conceptual_scaling(x[indexs,])
 
 # This context has VC dimension 80!!!
 
@@ -53,46 +49,19 @@ objective <- oofos:::compute_objective(data.frame(y=y),"y","AT1")
 
 
 # dist_mat_treutlein <- get_distance_from_context(context)
-#saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
-#dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
-#gbsb <- get_gbsb(x)
+saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
+dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
+gbsb <- get_gbsb(x)
+
+set.seed(1234567)
+indexs <- sample((1:80),size=9)
 
 
+D <- get_distance_from_context(context[,])
 
-
-
-D <- get_distance_from_context(context,normalized=TRUE)
-
-positive_quantile <- function(x,alpha){quantile(x[which(x>0)],alpha)}
-
-D_plus <- D[which(D>0)]
-
-eps <- quantile(D_plus,seq(0,0.6,length.out=10))
-
-fitted_pseudoultrametrics <- list()
-for(k in (1:10)){
-ans <- fit_ultrametric(D,eps=eps[k],upper_bound=4*max(D)+2*eps[k],start_solution=TRUE)
-gc()
-fitted_pseudoultrametrics[[k]] <- gurobi::gurobi(ans,list(timelimit=60*60))
-}
-D_ultra <- B$x[(1:3600)];dim(D_ultra) <- c(60,60)
-
-check_ultrametric_violations(D_ultra)
-
-context_ultra <- get_context_from_distance(D_ultra,threshold=3,complemented=FALSE)
-dim(context_ultra)
-# 32
-vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(context_ultra))$objval
-
-
-discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective)
-result <- gurobi::gurobi(discovery)
-discovery$objval <- result$objval
-
-test <- oofos::compute_extent_optim_test(discovery)
-
-
-saveRDS(gbsb,"results_treutlein_gbsb/absb.RDS")
+ans <- fit_ultrametric(D,eps=0,start_solution=TRUE)
+B <- gurobi::gurobi(ans)
+BB=BsaveRDS(gbsb,"results_treutlein_gbsb/absb.RDS")
 
 
 # gbsb:
