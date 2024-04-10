@@ -5,7 +5,7 @@
 ## set working directory accordingly !!!
 
 # load additional functions for computing stylized betweenness:
-source("used_stylized_betweenness_functions.R")
+#source("used_stylized_betweenness_functions.R")
 # load additional functions needed for gene expression data (gene filter and scaling has to be applied):
 source("additional_functions_for_gene_expression_data.R")
 
@@ -34,7 +34,7 @@ x <- log2(1+x)
 dim(x)
 x <- scaling(x)
 
-context <- oofos:::get_auto_conceptual_scaling(x[indexs,])
+context <- oofos:::get_auto_conceptual_scaling(x)
 
 # This context has VC dimension 80!!!
 
@@ -48,21 +48,22 @@ table(y)/length(y)
 objective <- oofos:::compute_objective(data.frame(y=y),"y","AT1")
 
 
-# dist_mat_treutlein <- get_distance_from_context(context)
-saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
-dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
-gbsb <- get_gbsb(x)
 
-<<<<<<< HEAD
-D_plus <- D[which(D>0)]
+dist_mat_treutlein <- get_distance_from_context(context)
+#saveRDS(dist_mat_treutlein,"dist_mat_treutlein.RDS")
+#dist_mat_treutlein <- readRDS("dist_mat_treutlein.RDS")
+
+
+
+D_plus <- dist_mat_treutlein[which(dist_mat_treutlein>0)]
 
 eps <- c(0,2*quantile(D_plus,seq(0,0.99,length.out=9)))
 
 fitted_pseudoultrametrics <- list()
 for(k in (1:10)){
-ans <- fit_ultrametric(D,eps=eps[k],upper_bound=4*max(D)+2*eps[k],start_solution=TRUE)
+ans <- fit_ultrametric(dist_mat_treutlein,eps=eps[k],upper_bound=4*max(dist_mat_treutlein)+2*eps[k],start_solution=TRUE)
 gc()
-fitted_pseudoultrametrics[[k]] <- gurobi::gurobi(ans,list(timelimit=60*60))
+fitted_pseudoultrametrics[[k]] <- try(gurobi::gurobi(ans,list(timelimit=60*60,threads=16)))
 }
 D_ultra <- (fitted_pseudoultrametrics[[10]])$x[(1:6400)];dim(D_ultra) <- c(80,80)
 
@@ -77,10 +78,12 @@ vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(context_
 discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective)
 result <- gurobi::gurobi(discovery)
 discovery$objval <- result$objval
-=======
+
+oofos::compute_extent_optim_test(discovery)
+
 set.seed(1234567)
 indexs <- sample((1:80),size=9)
->>>>>>> 97e586e0d529883b3313774dc9ab87b817d555a2
+
 
 
 D <- get_distance_from_context(context[,])
