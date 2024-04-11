@@ -57,7 +57,7 @@ dist_mat_treutlein <- get_distance_from_context(context)
 
 D_plus <- dist_mat_treutlein[which(dist_mat_treutlein>0)]
 
-eps <- c(0,2*quantile(D_plus,seq(0,0.99,length.out=9)))
+eps <- c(0,.1*quantile(D_plus,seq(0,0.99,length.out=9)))
 
 fitted_pseudoultrametrics <- list()
 for(k in (1:10)){

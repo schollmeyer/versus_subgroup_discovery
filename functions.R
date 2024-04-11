@@ -193,13 +193,18 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
    return(ans)}
 
- fit_ultrametric <- function(D,eps=0, start_solution=FALSE,upper_bound=4*max(D)){
-   n_objects <- nrow(D)
+ fit_ultrametric <- function(dist_mat,eps=0, solve=FALSE,param=NULL,start_solution=FALSE,upper_bound=4*max(D),bounded=FALSE,eps_lower,eps_upper){
+   n_objects <- nrow(dist_mat)
    ub=rep(upper_bound,n_objects^2+n_objects^3)
+   lb=rep(0,n_objects^2+n_objects^3)
+   if(bounded){
+     ub[seq_len(n_objects^2)] <- as.vector(dist_mat)+eps_upper
+     lb[seq_len(n_objects^2)] <- pmax(0,as.vector(dist_mat)-eps_lower)
+   }
    start <- NULL
    if(start_solution){
 
-     D_heuristic <- as.matrix(clue::ls_fit_ultrametric(D))
+     D_heuristic <- as.matrix(clue::ls_fit_ultrametric(dist_mat))
      start=as.vector(D_heuristic)
      t <- 1
 
@@ -231,7 +236,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
      for(l in (1:n_objects)){
        for(m in (1:n_objects)){
          i[t] <- t
-         j[t] <- mat[k,l]#mat2[k,m,l]+n_objects^2
+         j[t] <- mat[k,l]
          v[t] <- 1
 
          i[t+n_objects^3] <- t
@@ -256,8 +261,13 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
 
    Q=slam::simple_triplet_matrix(i=(1:(n_objects^2+n_objects^3)),j=(1:(n_objects^2+n_objects^3)),v=c(rep(1,n_objects^2),rep(0,n_objects^3)))
-   return(list(ub=ub,start=start,rhs=rep(eps,n_objects^2+n_objects^3),Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(D),rep(0,n_objects^3)),lb=rep(0,n_objects^2+n_objects^3),alpha=sum(D*D),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
- }
+   result <-(list(ub=ub,start=start,rhs=rep(eps,n_objects^2+n_objects^3),Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(dist_mat),rep(0,n_objects^3)),lb=lb,alpha=sum(dist_mat*dist_mat),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
+   if(solve){
+     result <- gurobi::gurobi(result,param=param)$x[seq_len(n_objects^2)]
+     dim(result) <- c(n_objects,n_objects)
+   }
+  return(result)
+  }
 
 
 
