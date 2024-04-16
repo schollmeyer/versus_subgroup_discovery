@@ -194,6 +194,8 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
    return(ans)}
 
  fit_ultrametric <- function(dist_mat,eps=rep(0,nrow(dist_mat)^2+nrow(dist_mat)^3), solve=FALSE,param=NULL,start_solution=FALSE,upper_bound=4*max(D),bounded=FALSE,eps_lower,eps_upper){
+   x <- rep(0,nrow(dist_mat)^2+nrow(dist_mat)^3)
+   print(dim(dist_mat))
    n_objects <- nrow(dist_mat)
    ub=rep(upper_bound,n_objects^2+n_objects^3)
    lb=rep(0,n_objects^2+n_objects^3)
@@ -230,7 +232,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
    i <- j <- v <- rep(0,n_objects^2+n_objects^3)
    t <- 1
    obj <- rnorm(n_objects^2+n_objects^3)
-
+   x[(1:n_objects^2)] <- as.vector(dist_mat)
    t <- 1
    for(k in (1:n_objects)){
      for(l in (1:n_objects)){
@@ -246,8 +248,12 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
          genconmax[[t]] <- list(resvar = mat2[k,m,l]+n_objects^2,vars=c(mat[k,m],mat[m,l]))
 
          #TODO
-         RHS[t] <- (dist_mat[k,l] - max(dist_mat[k,m],dist_mat[m,l]))
-         t <- t+1
+
+         #print((dist_mat[k,l] - max(dist_mat[k,m],dist_mat[m,l])))
+         RHS[t] <- (dist_mat[k,l] - (max(dist_mat[k,m],dist_mat[m,l])))
+
+         x[t+n_objects^2] <- (max(dist_mat[k,m],dist_mat[m,l]))
+         t <- t + 1
 
        }
        #tt <- tt+1
@@ -263,7 +269,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
 
    Q=slam::simple_triplet_matrix(i=(1:(n_objects^2+n_objects^3)),j=(1:(n_objects^2+n_objects^3)),v=c(rep(1,n_objects^2),rep(0,n_objects^3)))
-   result <-(list(ub=ub,start=start,RHS2 =RHS,rhs=eps,Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(dist_mat),rep(0,n_objects^3)),lb=lb,alpha=sum(dist_mat*dist_mat),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
+   result <-(list(x=x,ub=ub,start=start,RHS2=RHS,rhs=eps,Q=Q,A=slam::simple_triplet_matrix(i, j, v, nrow=n_objects^2+n_objects^3),obj= (-2)*c(as.vector(dist_mat),rep(0,n_objects^3)),lb=lb,alpha=sum(dist_mat*dist_mat),genconmax=genconmax,sense=rep("<=",n_objects^2+n_objects^3 ) ))
    if(solve){
      result <- gurobi::gurobi(result,param=param)$x[seq_len(n_objects^2)]
      dim(result) <- c(n_objects,n_objects)
