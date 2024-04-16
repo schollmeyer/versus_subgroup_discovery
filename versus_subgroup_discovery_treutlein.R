@@ -57,13 +57,13 @@ dist_mat_treutlein <- get_distance_from_context(context)
 
 D_plus <- dist_mat_treutlein[which(dist_mat_treutlein>0)]
 
-eps <- c(0,.1*quantile(D_plus,seq(0,0.99,length.out=9)))
+eps <- c(0,.8*quantile(D_plus,seq(0,0.99,length.out=19)))
 
 fitted_pseudoultrametrics <- list()
-for(k in (1:10)){
+for(k in (1:20)){
 ans <- fit_ultrametric(dist_mat_treutlein,eps=eps[k],upper_bound=4*max(dist_mat_treutlein)+2*eps[k],start_solution=TRUE)
 gc()
-fitted_pseudoultrametrics[[k]] <- try(gurobi::gurobi(ans,list(timelimit=60*60,threads=16)))
+fitted_pseudoultrametrics[[k]] <- try(gurobi::gurobi(ans,list(timelimit=60*60)))
 }
 D_ultra <- (fitted_pseudoultrametrics[[10]])$x[(1:6400)];dim(D_ultra) <- c(80,80)
 
