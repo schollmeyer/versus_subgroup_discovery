@@ -322,5 +322,20 @@ get_halfspace_context <- function(context){
  return(result)}
 
 
+compute_versus_halfspace <- function(context,index_1,index_2,extent1 = rep(0,nrow(context)),extent2 = rep(0,nrow(context))){
+  n_row <- nrow(context)
+  halfspace <- rep(0,n_row)
 
+  for(k in (1:n_row)){
+    extent_1 <- extent1;extent_1[c(k,index_2)] <- 1
+    extent_1 <- compute_object_closure(extent_1,context)
+
+    extent_2 <- extent2;extent_2[c(k,index_1)] <- 1
+    extent_2 <- compute_object_closure(extent_2,context)
+    if(extent_1[index_1]==1 & extent_2[index_2]==0){halfspace[k] <- 1}
+
+
+  }
+return(halfspace)
+}
 
