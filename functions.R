@@ -193,7 +193,7 @@ local_object_VCdims=function(X,indexs=(1:dim(X)[1]),outputflag,timelimit,pool=FA
 
    return(ans)}
 
- fit_ultrametric <- function(dist_mat,eps=rep(0,nrow(dist_mat)^2+nrow(dist_mat)^3), solve=FALSE,param=NULL,start_solution=FALSE,upper_bound=4*max(D),bounded=FALSE,eps_lower,eps_upper){
+ fit_ultrametric <- function(dist_mat,eps=rep(0,nrow(dist_mat)^2+nrow(dist_mat)^3), solve=FALSE,param=NULL,start_solution=FALSE,upper_bound=4*max(dist_mat),bounded=FALSE,eps_lower,eps_upper){
    x <- rep(0,nrow(dist_mat)^2+nrow(dist_mat)^3)
    print(dim(dist_mat))
    n_objects <- nrow(dist_mat)
