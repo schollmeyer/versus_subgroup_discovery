@@ -79,6 +79,7 @@ G <- compute_versus_halfspace(CI$context,idx[1],idx[2],E,E)
 sum(G)
 plot(x,pch=16)
 
+
 points(x[which(G==1),],pch=16,col="red")
 points(x[idx[(1:2)],],col="green",pch=16)
 points(x[which(E==1),],col="blue",pch=16)
