@@ -31,6 +31,7 @@ check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
   m <- ncol(dist_mat)
   counterexamples <- array(0,c(m,m))
   for( k in (1:m)){
+    print(k)
     for(l in (1:m)){
       # old version
       counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
@@ -60,8 +61,8 @@ return(counterexamples)
 
 
 
-get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1){
-  counterexamples <- check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)
+get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)){
+
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
   if(set_seed){set.seed(seed)}
