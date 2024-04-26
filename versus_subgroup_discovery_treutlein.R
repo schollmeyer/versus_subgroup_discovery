@@ -55,6 +55,7 @@ dist_mat_treutlein <- get_distance_from_context(context)
 
 
 
+
 D_plus <- dist_mat_treutlein[which(dist_mat_treutlein>0)]
 
 eps <- c(0,.8*quantile(D_plus,seq(0,0.99,length.out=19)))
