@@ -58,25 +58,32 @@ is_sublattice <- function(lattice_1,lattice_2){
 set.seed(1234567);x=rnorm(100*2);dim(x)=c(100,2);plot(x,pch=16);CI=convex.incidence(x)
 
 
-x=as.matrix(expand.grid((1:20),(1:20)));plot(x)
+x=as.matrix(expand.grid((1:12),(1:12)));plot(x)
 CI=convex.incidence(x)
 CT <- CI$context
 set.seed(1234567)
-E <- rep(0,100)#sample(c(0,1),prob=c(0.01,0.99),size=500,replace=TRUE)
+E <- rep(0,144)#sample(c(0,1),prob=c(0.01,0.99),size=500,replace=TRUE)
 E[(3:4)]=1
 
 CT <- CI$context[(1:100),]
 E <- compute_object_closure(E,CT)
-for(k in (1:9900)){
+for(k in (1:20592)){
 I <- rep(0,ncol(CT))
-k=587
-I[k] <- 1
-I[6000]<-1
+#k=587
+#I[k] <- 1
+idx <- sample(seq_len(ncol(CT)),size=3)
+#I[6000]<-1
+I[idx] <- 1
 E <- compute_phi(I,CT)
 #if(abs(sum(E)-200)<=5){print(k)}}
 idx <- sample(which(E==0),size=2)
-G <- compute_versus_halfspace(CI$context,idx[1],idx[2],E,E)
+G <- compute_versus_halfspace(CT,idx[1],idx[2],E,E)
 sum(G)
+EE <- E;EE[idx[2]] <- 1 ; EE <- compute_object_closure(EE,CT)
+print(k)
+if( EE[idx[1]] ==0 & any(compute_object_closure(G,CT) != G)){break}}
+EE=sum(G)
+
 plot(x,pch=16)
 
 

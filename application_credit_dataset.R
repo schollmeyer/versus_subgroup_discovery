@@ -19,7 +19,7 @@ whole_context <- oofos:::get_auto_conceptual_scaling(dat[,-c(9,21)])
 # For the classical subgroup discoery we make a sample split approach because
 # optimizing under H0 is computationally very expensive
 set.seed(1234567)
-indexs <- sample((1:1000),size =50)
+indexs <- sample((1:1000),size =30)
 context <- oofos:::get_auto_conceptual_scaling(dat[indexs,-c(9,21)])
 training_context <- whole_context[indexs,]
 test_context <- whole_context[-indexs,]
@@ -69,7 +69,7 @@ test <- oofos::compute_extent_optim_test(model)
 
 D <- as.matrix(dist(context))
 #D <- as.matrix(clue::ls_fit_ultrametric(D))
-context2 <- get_context_from_distance(D,threshold=20,lambda=0.8,complemented=FALSE)
+context <- get_context_from_distance(D,threshold=0,eps=10^-16,eps2=10^-17,lambda=0.99,complemented=FALSE)
 
 context3 <- context2
 

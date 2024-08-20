@@ -7,7 +7,7 @@
 # load additional functions for computing stylized betweenness:
 #source("used_stylized_betweenness_functions.R")
 # load additional functions needed for gene expression data (gene filter and scaling has to be applied):
-source("additional_functions_for_gene_expression_data.R")
+source("../paperproject_starshaped-subgroup_discovery/additional_functions_for_gene_expression_data.R")
 
 ### DATA
 d <- read.table("datasets/nature13173-s4.txt")
@@ -34,7 +34,7 @@ x <- log2(1+x)
 dim(x)
 x <- scaling(x)
 
-context <- oofos:::get_auto_conceptual_scaling(x)
+
 
 # This context has VC dimension 80!!!
 
@@ -44,7 +44,18 @@ table(y)/length(y)
 # y
 #  AT1      AT2       BP ciliated    Clara
 #  0.5125   0.1500   0.1625   0.0375   0.1375
+set.seed(1234567)
+idxs <- sample((1:80),size=40)
+x_all <- x
+y_all <- y
+x <- x_all[idxs,]
+y <- y_all[idxs]
 
+# permute gene expression values for randomly selected genes
+i=seq(1,6751,length.out=6100)
+i=sample((1:6751),size=6100)
+for(k in i){x[,k] <-sample(x[,k])}
+context <- oofos:::get_auto_conceptual_scaling(x)
 objective <- oofos:::compute_objective(data.frame(y=y),"y","AT1")
 
 
@@ -66,19 +77,30 @@ ans <- fit_ultrametric(dist_mat_treutlein,eps=eps[k],upper_bound=4*max(dist_mat_
 gc()
 fitted_pseudoultrametrics[[k]] <- try(gurobi::gurobi(ans,list(timelimit=60*60)))
 }
-D_ultra <- (fitted_pseudoultrametrics[[10]])$x[(1:6400)];dim(D_ultra) <- c(80,80)
 
+D_ultra <- (fitted_pseudoultrametrics[[1]])$x[(1:1600)];dim(D_ultra) <- c(40,40)
+
+D_ultra <- dist_mat_treutlein
 check_ultrametric_violations(D_ultra)
 
-context_ultra <- get_context_from_distance(D_ultra,threshold=3,complemented=FALSE)
+tree_add <-  ape::nj(dist_mat_treutlein)
+D_add <- ape::cophenetic.phylo(tree_add)
+
+context_ultra <- get_context_from_distance(D_add,lambda=1,threshold=100,eps2=0,complemented=FALSE)
 dim(context_ultra)
 # 32
 vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(context_ultra))$objval
 
-
-discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective)
+objective2 <- sample(objective)
+discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective2)
 result <- gurobi::gurobi(discovery)
 discovery$objval <- result$objval
+
+##
+Z <- oofos:::get_non_stylized_betweenness(context_ultra)
+discovery2 <- oofos::discover_starshaped_subgroups(stylized_betweenness=Z,objective=objective2,complexity_control=Inf)
+discovery2$objval-result$objval
+
 
 oofos::compute_extent_optim_test(discovery)
 

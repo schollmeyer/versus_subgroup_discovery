@@ -1,10 +1,29 @@
 get_distance_from_context <- function(context,bandwidth,method="manhattan",normalized=TRUE){
-
-
   result <- as.matrix(dist(context,method="manhattan"))
+  if(normalized){result <- result/ncol(context)}
+return(result)}
 
-if(normalized){result <- result/ncol(context)}
-  return(result)}
+get_distance_from_extens <- function(extents){
+  n_col <- ncol(extents)
+  D <- array(0,c(n_col,n_col))
+  for(k in seq_len(n_col)){
+    for(l in seq_len(n_col)){
+      D[k,l] <- sum(extents[,k ] & extents[,l]) /sum(extents[,k] |extents[,l])
+    }
+  }
+  return(D)}  
+
+get_halfspace_distance <- function(context){# same as get_distance_from_context?
+  n_row <- nrow(context)
+  D <- array(0,c(n_row,n_row))
+  for(k in (1:n_row)){
+    for(l in (1:n_row)){
+      D[k,l] <- sum(context[k,] != context[l,]) 
+      
+    }}
+return(D)}
+  
+
 
  # n_objects <- nrow(context)
  # n_attributes <- ncol(context)
@@ -31,7 +50,7 @@ check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
   m <- ncol(dist_mat)
   counterexamples <- array(0,c(m,m))
   for( k in (1:m)){
-    print(k)
+    #print(k)
     for(l in (1:m)){
       # old version
       counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
@@ -46,7 +65,7 @@ check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
 
   }
   #print(sum(counterexamples>0))
-return(counterexamples)
+return(list(counterexamples=counterexamples,result=all(counterexamples==0)))
 
 }
 
@@ -61,8 +80,7 @@ return(counterexamples)
 
 
 
-get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)){
-
+get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)$counterexamples){
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
   if(set_seed){set.seed(seed)}
