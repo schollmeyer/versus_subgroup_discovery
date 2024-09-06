@@ -69,7 +69,11 @@ test <- oofos::compute_extent_optim_test(model)
 
 D <- as.matrix(dist(context))
 #D <- as.matrix(clue::ls_fit_ultrametric(D))
+<<<<<<< HEAD
 context <- get_context_from_distance(D,threshold=0,eps=10^-16,eps2=10^-17,lambda=0.99,complemented=FALSE)
+=======
+context2 <- get_context_from_distance(D,threshold=20,lambda=0.6,complemented=FALSE)
+>>>>>>> c16d5197ce9dfbec89c596f65994d388f8a9f6bc
 
 context3 <- context2
 

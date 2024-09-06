@@ -80,27 +80,32 @@ return(list(counterexamples=counterexamples,result=all(counterexamples==0)))
 
 
 
-get_context_from_distance <- function(dist_mat,threshold,complemented=TRUE,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)$counterexamples){
+get_context_from_distance <- function(dist_mat,threshold,complemented=FALSE,indexs=NULL,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)$counterexamples){
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
   if(set_seed){set.seed(seed)}
   sampled_indexs <- sample(seq_len(n_rows),size=n_rows_sample)
   if(sampling_proportion==1){sampled_indexs <- seq_len(n_rows)}
+  if(!is.null(indexs)){sampled_indexs <-indexs;n_rows_sample <- length(indexs)}
   context <- array(0,c(n_rows,n_rows_sample*(n_rows_sample-1)))
+  counterexamples <- check_three_point_condition(dist_mat[sampled_indexs,sampled_indexs],eps=eps2,lambda=lambda)$counterexamples
   t <- 1
+  col_names <- NULL
   for(k in seq_len(n_rows_sample)){
      for(l in seq_len(n_rows_sample)[-k]){
        if(counterexamples[k,l] <= threshold){
          print(counterexamples[k,l])
-	     #print(t)
+	     print(c(k,l))
 	     context[,t] <- (dist_mat[,sampled_indexs[k]] > dist_mat[,sampled_indexs[l]] +eps)
-
+       col_names <- c(col_names,paste(k,">",l,collaps=""))
+       #print(col_names)
 	      t <- t + 1
        }
 
 	  }
-	 }
-
+  }
+  context <- context[,(1:(t-1))]
+colnames(context) <- col_names
 if(complemented){context <- (cbind(context,1-context))}
 if(remove_duplicates){context <- t(unique(t(context)))}
 return(context)}

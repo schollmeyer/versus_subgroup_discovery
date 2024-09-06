@@ -83,16 +83,22 @@ D_ultra <- (fitted_pseudoultrametrics[[1]])$x[(1:1600)];dim(D_ultra) <- c(40,40)
 D_ultra <- dist_mat_treutlein
 check_ultrametric_violations(D_ultra)
 
-tree_add <-  ape::nj(dist_mat_treutlein)
+i <- sample((1:80),size=20)
+tree_add <-  ape::nj(dist_mat_treutlein[i,i]+rnorm(length(i)^2))
 D_add <- ape::cophenetic.phylo(tree_add)
 
-context_ultra <- get_context_from_distance(D_add,lambda=1,threshold=100,eps2=0,complemented=FALSE)
+context_ultra <- get_context_from_distance(D_add,lambda=1,threshold=0,eps2=0,complemented=FALSE)
+check(context_ultra)
 dim(context_ultra)
 # 32
-vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(context_ultra))$objval
+vc_dimension_ultra <- gurobi::gurobi(oofos::compute_extent_vc_dimension(CT2))$objval
 
-objective2 <- sample(objective)
-discovery <- oofos::optimize_on_context_extents(context_ultra,objective=objective2)
+XX <- add_hyperplanes(context)
+D <- as.matrix(dist(XX))
+CT <- get_context_from_distance(D,threshold=1000)
+
+objective2 <- rnorm(length(i))#sample(objective2)
+discovery <- oofos::optimize_on_context_extents(context,objective=objective2)
 result <- gurobi::gurobi(discovery)
 discovery$objval <- result$objval
 
