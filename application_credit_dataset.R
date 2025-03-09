@@ -19,7 +19,7 @@ whole_context <- oofos:::get_auto_conceptual_scaling(dat[,-c(9,21)])
 # For the classical subgroup discoery we make a sample split approach because
 # optimizing under H0 is computationally very expensive
 set.seed(1234567)
-indexs <- sample((1:1000),size =30)
+indexs <- sample((1:1000),size =500)
 context <- oofos:::get_auto_conceptual_scaling(dat[indexs,-c(9,21)])
 training_context <- whole_context[indexs,]
 test_context <- whole_context[-indexs,]
@@ -56,7 +56,7 @@ model$A <- as.matrix(model$A)
 # add additional constraints that may help to speed up the optimization
 model <- oofos:::add_attr_antiimplications(model)
 #compute a preliminary result with timelimit of 10 minits
-result_1 <- gurobi::gurobi(model,list(timelimit=60*10))
+result_1 <- gurobi::gurobi(model,list(timelimit=60*1))
 
 result_1$objval
 # [1] 0.6388889

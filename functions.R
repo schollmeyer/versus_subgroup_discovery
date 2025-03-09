@@ -1,3 +1,14 @@
+compute_random_dist <- function(n,dimension){
+   x <- rnorm(n*dimension);dim(x) <- c(n,dimension)
+   return(as.matrix(dist(x)))
+  
+}
+ultra_dist <- function(distances){.0*distances + as.matrix(clue::ls_fit_ultrametric(distances))}
+id <- function(distances){distances}
+add_dist <- function(distances){ape::cophenetic.phylo(ape::nj(distances))}
+
+
+
 get_distance_from_context <- function(context,bandwidth,method="manhattan",normalized=TRUE){
   result <- as.matrix(dist(context,method="manhattan"))
   if(normalized){result <- result/ncol(context)}
@@ -50,11 +61,13 @@ check_three_point_condition <- function(dist_mat,eps=10^-6,lambda=1){
   m <- ncol(dist_mat)
   counterexamples <- array(0,c(m,m))
   for( k in (1:m)){
-    #print(k)
+    print(k)
     for(l in (1:m)){
       # old version
-      counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
-      counterexamples[k,l] <- counterexamples[k,l]+ (1-lambda)*sum(pmax(dist_mat[k,] -( eps+ (pmax(dist_mat[k,l],dist_mat[l,]))),0))
+      #counterexamples[k,l] <- lambda*sum(dist_mat[k,] > eps+ (pmax(dist_mat[k,l],dist_mat[l,])))
+     counterexamples[k,l] <-  sum(dist_mat[,k] > eps+ (pmax(dist_mat[k,l],dist_mat[,l])))
+     
+      #counterexamples[k,l] <- counterexamples[k,l]+ (1-lambda)*sum(pmax(dist_mat[k,] -( eps+ (pmax(dist_mat[k,l],dist_mat[l,]))),0))
 
 
 
@@ -87,17 +100,20 @@ get_context_from_distance <- function(dist_mat,threshold,complemented=FALSE,inde
   sampled_indexs <- sample(seq_len(n_rows),size=n_rows_sample)
   if(sampling_proportion==1){sampled_indexs <- seq_len(n_rows)}
   if(!is.null(indexs)){sampled_indexs <-indexs;n_rows_sample <- length(indexs)}
-  context <- array(0,c(n_rows,n_rows_sample*(n_rows_sample-1)))
-  counterexamples <- check_three_point_condition(dist_mat[sampled_indexs,sampled_indexs],eps=eps2,lambda=lambda)$counterexamples
+  context <- array(FALSE,c(n_rows,n_rows_sample*(n_rows_sample-1)))
+  ce <- rep(0,n_rows_sample*(n_rows_sample-1))
+  #counterexamples <- check_three_point_condition(dist_mat[sampled_indexs,sampled_indexs],eps=eps2,lambda=lambda)$counterexamples
   t <- 1
   col_names <- NULL
   for(k in seq_len(n_rows_sample)){
+    print(k)
      for(l in seq_len(n_rows_sample)[-k]){
        if(counterexamples[k,l] <= threshold){
-         print(counterexamples[k,l])
-	     print(c(k,l))
+         #print(counterexamples[k,l])
+	     #print(c(k,l))
 	     context[,t] <- (dist_mat[,sampled_indexs[k]] > dist_mat[,sampled_indexs[l]] +eps)
-       col_names <- c(col_names,paste(k,">",l,collaps=""))
+	     ce[t] <- counterexamples[k,l]
+       #col_names <- c(col_names,paste(k,">",l,collaps=""))
        #print(col_names)
 	      t <- t + 1
        }
@@ -107,8 +123,13 @@ get_context_from_distance <- function(dist_mat,threshold,complemented=FALSE,inde
   context <- context[,(1:(t-1))]
 colnames(context) <- col_names
 if(complemented){context <- (cbind(context,1-context))}
-if(remove_duplicates){context <- t(unique(t(context)))}
-return(context)}
+if(remove_duplicates){
+  non_duplicates <- which(!duplicated(t(context)))
+  context <- context[,non_duplicates]
+  ce <- ce[non_duplicates]
+  
+  }
+return(list(context=context,counterexamples=ce))}
 
 regularize_tree <- function(tree,lambda){
 
